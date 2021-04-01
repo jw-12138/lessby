@@ -3,7 +3,9 @@
   "version": "1.0.2",
   "description": "yep, another less compiler 🌝",
   "main": "src/index.js",
-  "bin": "./src/index.js",
+  "bin": {
+		"lessby": "./bin/lessby"
+	},
   "scripts": {
     "pub": "npm publish",
     "patch": "npm version patch",
