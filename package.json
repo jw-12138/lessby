@@ -3,8 +3,13 @@
   "version": "1.0.0",
   "description": "better less compiler.",
   "main": "index.js",
+  "bin": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pack": "npm pack",
+    "patch": "npm version patch",
+    "minor": "npm version minor",
+    "major": "npm version major"
   },
   "keywords": [
     "less",
@@ -15,6 +20,8 @@
   "license": "MIT",
   "dependencies": {
     "commander": "^7.2.0",
-    "less": "^4.1.1"
+    "less": "^4.1.1",
+    "shelljs": "^0.8.4",
+    "single-line-log": "^1.1.2"
   }
 }
