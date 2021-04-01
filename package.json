@@ -4,7 +4,7 @@
   "description": "yep, another less compiler 🌝",
   "main": "src/index.js",
   "bin": {
-    "lessby": "./bin/lessby"
+    "lessby": "./src/index.js"
   },
   "scripts": {
     "pub": "npm publish",
