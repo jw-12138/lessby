@@ -1,11 +1,11 @@
 {
   "name": "lessby",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "yep, another less compiler 🌝",
   "main": "src/index.js",
   "bin": {
-		"lessby": "./bin/lessby"
-	},
+    "lessby": "./bin/lessby"
+  },
   "scripts": {
     "pub": "npm publish",
     "patch": "npm version patch",
