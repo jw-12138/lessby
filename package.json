@@ -1,0 +1,20 @@
+{
+  "name": "lessby",
+  "version": "1.0.0",
+  "description": "better less compiler.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "less",
+    "compiler",
+    "watcher"
+  ],
+  "author": "Jacky Wong",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^7.2.0",
+    "less": "^4.1.1"
+  }
+}
