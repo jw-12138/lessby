@@ -23,11 +23,11 @@
   "dependencies": {
     "chokidar": "^3.5.1",
     "commander": "^7.2.0",
+    "less": "^4.1.1",
     "less-plugin-clean-css": "^1.5.1",
     "sha1": "^1.1.1",
     "shelljs": "^0.8.4",
-    "single-line-log": "^1.1.2",
-    "less": "^4.1.1"
+    "single-line-log": "^1.1.2"
   },
   "devDependencies": {}
 }

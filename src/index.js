@@ -16,8 +16,6 @@ class App {
     this.param = ''
     this.extension = 'css'
     this.recursiveArr = []
-    this.loading_char = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖']
-    this.loading_ani = 0
 
     this.init = function () {
       this.initProgram()
@@ -50,18 +48,17 @@ class App {
 
     this.initProgram = function () {
       program
-        .option(`-i, --input <path>`, `input less file`)
-        .option(`-o, --output <path>`, `output less file`)
-        .option(`-if, --input-folder <path>`, `input folder`)
-        .option(`-of, --output-folder <path>`, `output folder`)
-        .option('-e, --extension <ext>', 'output file extension, eg. `css`, `wxss`')
-        .option(`-R, --recursive`, `compile less files recursively`)
-        .option(`-m, --minify`, `minify output file`)
-        .option('-C, --config-file', 'specify config file')
-        .option(`-s, --source-map`, `generate source map files`)
+        .option('-i, --input <folder>', 'input less file')
+        .option('-o, --output <folder>', 'output less file')
+        .option('-e, --extension <ext>', 'output file extension, eg. \' -e wxss \'')
+        .option('-c, --config-file <config-file>', 'specify config file')
+        .option('--mid-name <str>', 'specify output file middle name, eg. \' --mid-name min \'')
+        .option('-r, --recursive', 'compile less files recursively')
+        .option('-m, --minify', 'minify output file')
+        .option('-s, --source-map', 'generate source map files')
         .option(
-          `-lo, --less-options <options>`,
-          'specify original less-cli options, eg. "--source-map-url=URL -l --no-color"'
+          '--less-options <str>',
+          'specify original less-cli options, eg. \' --less-options "-l --no-color" \''
         )
       program.parse()
 
@@ -70,6 +67,11 @@ class App {
 
     this.run = function () {
       // console.log(_.options)
+
+      if (!_.options.input) {
+        console.error('error: no input source specified')
+        shell.exit(1)
+      }
 
       if (_.options.sourceMap) {
         _.param += '--source-map '
