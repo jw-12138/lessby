@@ -1,11 +1,10 @@
 {
   "name": "lessby",
   "version": "1.0.1",
-  "description": "better less compiler.",
-  "main": "index.js",
-  "bin": "index.js",
+  "description": "yep, another less compiler 🌝",
+  "main": "src/index.js",
+  "bin": "./src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "pack": "npm pack",
     "patch": "npm version patch",
     "minor": "npm version minor",
@@ -19,9 +18,14 @@
   "author": "Jacky Wong",
   "license": "MIT",
   "dependencies": {
+    "chokidar": "^3.5.1",
     "commander": "^7.2.0",
-    "less": "^4.1.1",
+    "less-plugin-clean-css": "^1.5.1",
+    "sha1": "^1.1.1",
     "shelljs": "^0.8.4",
     "single-line-log": "^1.1.2"
+  },
+  "devDependencies": {
+    "less": "^4.1.1"
   }
 }
