@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "bin": "./src/index.js",
   "scripts": {
-    "publish": "npm publish",
+    "pub": "npm publish",
     "patch": "npm version patch",
     "minor": "npm version minor",
     "major": "npm version major"
