@@ -1,6 +1,6 @@
 {
   "name": "lessby",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "yep, another less compiler 🌝",
   "main": "src/index.js",
   "bin": {
