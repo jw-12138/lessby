@@ -1,6 +1,6 @@
 {
   "name": "lessby",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "yep, another less compiler 🌝",
   "main": "src/index.js",
   "bin": {
@@ -23,7 +23,7 @@
     "url": "https://github.com/jw-12138/lessby"
   },
   "bugs": {
-    "url" : "https://github.com/jw-12138/lessby/issues"
+    "url": "https://github.com/jw-12138/lessby/issues"
   },
   "author": "Jacky Wong",
   "license": "MIT",
