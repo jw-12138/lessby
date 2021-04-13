@@ -18,6 +18,13 @@
     "compiler",
     "watcher"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jw-12138/lessby"
+  },
+  "bugs": {
+    "url" : "https://github.com/jw-12138/lessby/issues"
+  },
   "author": "Jacky Wong",
   "license": "MIT",
   "dependencies": {
