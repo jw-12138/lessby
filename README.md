@@ -2,6 +2,12 @@
 
 [Lessby](https://github.com/jw-12138/lessby/) is a simple less file cli-compiler.
 
+## Installation
+
+```
+npm i lessby
+```
+
 ## Usage
 
 ``` 
