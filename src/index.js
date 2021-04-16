@@ -30,7 +30,7 @@ class App {
         ;(function next() {
           var file = list[i++]
           if (!file) return done(null, results)
-          file = path.resolve(dir, file)
+          file = path.join(dir, file)
           fs.stat(file, function (err, stat) {
             if (stat && stat.isDirectory()) {
               _.walk(file, function (err, res) {
@@ -55,7 +55,6 @@ class App {
         .option('-r, --recursive', 'compile less files recursively')
         .option('-m, --minify', 'minify output file')
         .option('-s, --source-map', 'generate source map files')
-        .option('-n, --no-init-compile', 'only compile files when changes are occurred')
         .option('--less-options <str>', 'specify original less-cli options, eg. \' --less-options "-l --no-color" \'')
       program.parse()
 
@@ -63,15 +62,8 @@ class App {
     }
 
     this.run = function () {
-      console.log(_.options)
-
       if (!_.options.input) {
         console.error('error: no input folder specified')
-        shell.exit(1)
-      }
-
-      if (!_.options.output) {
-        console.error('error: no output folder specified')
         shell.exit(1)
       }
 
@@ -83,33 +75,66 @@ class App {
         _.param += '--clean-css '
       }
 
-      chok.watch(_.options.input).on('all', (event, path) => {
-        if (event == 'add') {
-          console.log('lessby is currently on...')
-          if(!_.options.noInitCompile){
-            _.defaultRun()
-          }
+      let fileList = []
+      let rec_fun
+      if (_.options.recursive) {
+        rec_fun = _.walk
+      } else {
+        rec_fun = function (dir, c) {
+          fs.readdir(dir, c)
         }
-        if (event == 'change') {
-          log(`[🧭] [${_.options.input}] has changed, recompiling... `)
+      }
 
-          _.defaultRun()
-        }
+      rec_fun(_.options.input, function (err, files) {
+        files.forEach((file) => {
+          if (path.extname(file) == '.less') {
+            if (_.options.recursive) {
+              fileList.push(file)
+            } else {
+              fileList.push(path.join(_.options.input, file))
+            }
+          }
+        })
+        call()
       })
+
+      let call = function () {
+        fileList.forEach((f) => {
+          chok.watch(f).on('all', (event, path) => {
+            if (event == 'add') {
+              console.log(`lessby is watching [${path}], waiting for changes...`)
+            }
+            if (event == 'change') {
+              log(`[🧭] [${path}] has changed, recompiling... `)
+              _.defaultRun(path)
+            }
+          })
+        })
+      }
     }
 
-    this.defaultRun = function () {
-      let input = _.options.input
-      let output_folder = _.options.output
-      let output_name = path.basename(input).split('.').slice(0, -1).join('.')
+    this.defaultRun = function (p) {
+      let output_folder = path.dirname(p)
+      let output_name = path.parse(p).name
+
+      let rc_opf = null
+
+      if (_.options.recursive) {
+        let _i = path.normalize(_.options.input)
+        let _o = path.normalize(_.options.output)
+        let _p = path.normalize(p)
+
+        rc_opf = path.dirname(_p.replace(_i, _o))
+      }
 
       let e = _.options.extension ? _.options.extension : _.extension
 
-      let sh = `npx lessc ${_.param} "${input}" "${output_folder}/${output_name}.${e}"`
-
-      console.log(sh)
-
-      // _.execShell(sh, input)
+      if (_.options.midName) {
+        output_name = `${output_name}.${_.options.midName}`
+      }
+      let op = rc_opf ? `${rc_opf}/${output_name}.${e}` : `${output_folder}/${output_name}.${e}`
+      let sh = `npx lessc ${_.options.lessOptions} ${_.param} "${p}" "${op}"`
+      _.execShell(sh, p)
     }
 
     this.execShell = function (script, name) {
