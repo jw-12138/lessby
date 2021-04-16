@@ -48,28 +48,30 @@ class App {
 
     this.initProgram = function () {
       program
-        .option('-i, --input <folder>', 'input less file')
-        .option('-o, --output <folder>', 'output less file')
-        .option('-e, --extension <ext>', 'output file extension, eg. \' -e wxss \'')
-        .option('-c, --config-file <config-file>', 'specify config file')
-        .option('--mid-name <str>', 'specify output file middle name, eg. \' --mid-name min \'')
+        .option('-i, --input <folder>', 'input less folder')
+        .option('-o, --output <folder>', 'output less folder')
+        .option('-e, --extension <ext>', "output file extension, eg. ' -e wxss '")
+        .option('--mid-name <str>', "specify output file middle name, eg. ' --mid-name min '")
         .option('-r, --recursive', 'compile less files recursively')
         .option('-m, --minify', 'minify output file')
         .option('-s, --source-map', 'generate source map files')
-        .option(
-          '--less-options <str>',
-          'specify original less-cli options, eg. \' --less-options "-l --no-color" \''
-        )
+        .option('-n, --no-init-compile', 'only compile files when changes are occurred')
+        .option('--less-options <str>', 'specify original less-cli options, eg. \' --less-options "-l --no-color" \'')
       program.parse()
 
       this.options = program.opts()
     }
 
     this.run = function () {
-      // console.log(_.options)
+      console.log(_.options)
 
       if (!_.options.input) {
-        console.error('error: no input source specified')
+        console.error('error: no input folder specified')
+        shell.exit(1)
+      }
+
+      if (!_.options.output) {
+        console.error('error: no output folder specified')
         shell.exit(1)
       }
 
@@ -84,6 +86,9 @@ class App {
       chok.watch(_.options.input).on('all', (event, path) => {
         if (event == 'add') {
           console.log('lessby is currently on...')
+          if(!_.options.noInitCompile){
+            _.defaultRun()
+          }
         }
         if (event == 'change') {
           log(`[🧭] [${_.options.input}] has changed, recompiling... `)
@@ -95,11 +100,7 @@ class App {
 
     this.defaultRun = function () {
       let input = _.options.input
-
-      if (!_.inputIsfolder && path.extname(input) !== '.less') {
-        return false
-      }
-      let output_folder = path.dirname(input)
+      let output_folder = _.options.output
       let output_name = path.basename(input).split('.').slice(0, -1).join('.')
 
       let e = _.options.extension ? _.options.extension : _.extension
@@ -108,7 +109,7 @@ class App {
 
       console.log(sh)
 
-      _.execShell(sh, input)
+      // _.execShell(sh, input)
     }
 
     this.execShell = function (script, name) {
