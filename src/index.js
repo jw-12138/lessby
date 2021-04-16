@@ -104,9 +104,9 @@ class App {
 
       let e = _.options.extension ? _.options.extension : _.extension
 
-      let sh = `npx lessc ${_.param} ${input} ${output_folder}/${output_name}.${e}`
+      let sh = `npx lessc ${_.param} "${input}" "${output_folder}/${output_name}.${e}"`
 
-      // console.log(sh)
+      console.log(sh)
 
       _.execShell(sh, input)
     }
