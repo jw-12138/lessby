@@ -122,7 +122,7 @@ class App {
 
       if (_.options.recursive) {
         let _i = path.normalize(_.options.input)
-        let _o = path.normalize(_.options.output)
+        let _o = path.normalize(_.options.output ? _.options.output : _i)
         let _p = path.normalize(p)
 
         rc_opf = path.dirname(_p.replace(_i, _o))
