@@ -116,6 +116,7 @@ class App {
     this.defaultRun = function (p) {
       let output_folder = path.dirname(p)
       let output_name = path.parse(p).name
+      let lessOptions = _.options.lessOptions ? _.options.lessOptions : ''
 
       let rc_opf = null
 
@@ -133,7 +134,7 @@ class App {
         output_name = `${output_name}.${_.options.midName}`
       }
       let op = rc_opf ? `${rc_opf}/${output_name}.${e}` : `${output_folder}/${output_name}.${e}`
-      let sh = `npx lessc ${_.options.lessOptions} ${_.param} "${p}" "${op}"`
+      let sh = `npx lessc ${lessOptions} ${_.param} "${p}" "${op}"`
       _.execShell(sh, p)
     }
 
