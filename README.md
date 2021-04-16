@@ -92,4 +92,4 @@ lessby -i src -s
 
 And finally, the original `lessc` options.  
 
-Since this is an npm pack based on `lessc`, So I think it'll be good incase you want something which I didn't cover.
+Since this is an npm pack based on `lessc`, So I think it'll be good in case you need something I didn't cover.
