@@ -2,7 +2,7 @@
 
 [lessby](https://github.com/jw-12138/lessby/) is a simple less file cli-compiler.
 
-<video src="vid/sample.mp4" muted loop autoplay></video>
+![Exsample](vid/sample.gif)
 
 ## Installation
 
