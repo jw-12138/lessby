@@ -5,7 +5,7 @@
 ## Installation
 
 ```
-npm i lessby
+npm i lessby -D
 ```
 
 ## Usage
