@@ -114,7 +114,7 @@ class App {
     }
 
     this.defaultRun = function (p) {
-      let output_folder = path.dirname(p)
+      let output_folder = _.options.output ? _.options.output : path.dirname(p)
       let output_name = path.parse(p).name
       let lessOptions = _.options.lessOptions ? _.options.lessOptions : ''
 

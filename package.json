@@ -4,9 +4,10 @@
   "description": "yep, another less compiler 🌝",
   "main": "src/index.js",
   "bin": {
-    "lessby": "src/index.js"
+    "lessby": "dist/index.js"
   },
   "scripts": {
+    "build": "npx babel src -d dist",
     "test": "echo ''",
     "pub": "npm publish",
     "patch": "npm version patch",
@@ -36,5 +37,9 @@
     "shelljs": "^0.8.4",
     "single-line-log": "^1.1.2"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@babel/cli": "^7.13.14",
+    "@babel/core": "^7.13.15",
+    "@babel/preset-env": "^7.13.15"
+  }
 }
