@@ -153,7 +153,7 @@ class App {
       let cp_hash = sha1(d)
       let sp = cp_hash.slice(-6)
       let s = str ? str : `Compiled successfully! #[${sp}]`
-      log(`[✅] [${name}]: ${s}`)
+      log(`[✅] [${name}] ${s}`)
     }
   }
 }
