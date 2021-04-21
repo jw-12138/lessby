@@ -144,19 +144,25 @@ class App {
             perf.start()
             log(`[🧭] Imported file [${path}] has changed, recompiling its father file [${o.father}]...`)
             _.getShell(o.father)
-            let father = _.getFather(o.father)
-            if(father){
-              _.getShell(father)
+            if(_.hasFather(o.father)){
+              _.getShell(_.getFather(o.father))
             }
           }
         })
       })
     }
 
-    this.getFather = function (son, call) {
+    this.getFather = function (son) {
       _.importedList.forEach((element) => {
         if(son == element.son){
-          if (call) call()
+          return element.father
+        }
+      })
+    }
+
+    this.hasFather = function (son) {
+      _.importedList.forEach((element) => {
+        if(son == element.son){
           return true
         }
       })
