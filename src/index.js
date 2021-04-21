@@ -144,9 +144,8 @@ class App {
             perf.start()
             log(`[🧭] Imported file [${path}] has changed, recompiling its father file [${o.father}]...`)
             _.getShell(o.father)
-            if(_.hasFather(o.father)){
-              _.getShell(_.getFather(o.father))
-            }
+
+            // recursively get father
           }
         })
       })
