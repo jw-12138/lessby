@@ -6,7 +6,10 @@ const fs = require('fs')
 const path = require('path')
 const shell = require('shelljs')
 const log = require('single-line-log').stdout
-const sha1 = require('sha1')
+const perf = require('execution-time')()
+const readline = require('linebyline')
+const extractPath = require('extract-path')
+const { stringify } = require('querystring')
 
 class App {
   constructor() {
@@ -16,10 +19,12 @@ class App {
     this.param = ''
     this.extension = 'css'
     this.recursiveArr = []
+    this.hasImportedFiles = false
+    this.watchList = []
+    this.importedList = []
 
     this.init = function () {
       this.initProgram()
-      this.run()
     }
 
     this.walk = function (dir, done) {
@@ -57,13 +62,19 @@ class App {
         .option('-s, --source-map', 'generate source map files')
         .option('--less-options <str>', 'specify original less-cli options, eg. \' --less-options "-l --no-color" \'')
       program.parse()
-
       this.options = program.opts()
+
+      this.initParam()
     }
 
-    this.run = function () {
+    this.initParam = function () {
       if (!_.options.input) {
         console.error('error: no input folder specified')
+        shell.exit(1)
+      }
+
+      if (!fs.existsSync(_.options.input)) {
+        console.error('error: input folder does not exsist, please create it first!')
         shell.exit(1)
       }
 
@@ -75,7 +86,6 @@ class App {
         _.param += '--clean-css '
       }
 
-      let fileList = []
       let rec_fun
       if (_.options.recursive) {
         rec_fun = _.walk
@@ -89,31 +99,100 @@ class App {
         files.forEach((file) => {
           if (path.extname(file) == '.less') {
             if (_.options.recursive) {
-              fileList.push(file)
+              _.watchList.push(path.normalize(file))
             } else {
-              fileList.push(path.join(_.options.input, file))
+              _.watchList.push(path.normalize(path.join(_.options.input, file)))
             }
           }
         })
-        call()
+        _.getImported(_.watchList)
+
+        let v = null
+        let s = setInterval(() => {
+          if (_.importedList == v) {
+            clearInterval(s)
+            call()
+          }
+          v = _.importedList
+        }, 100)
       })
 
       let call = function () {
-        fileList.forEach((f) => {
+        _.watchImported()
+        _.watchList.forEach((f) => {
           chok.watch(f).on('all', (event, path) => {
             if (event == 'add') {
               console.log(`lessby is watching [${path}], waiting for changes...`)
             }
             if (event == 'change') {
-              log(`[🧭] [${path}] has changed, recompiling... `)
-              _.defaultRun(path)
+              perf.start()
+              log(`[🧭] [${path}] has changed, recompiling...`)
+              _.getShell(path)
             }
           })
         })
       }
     }
 
-    this.defaultRun = function (p) {
+    this.watchImported = function () {
+      _.importedList.forEach((o) => {
+        chok.watch(o.son).on('all', (event, path) => {
+          if (event == 'add') {
+            console.log(`lessby is watching imported file [${path}], waiting for changes...`)
+          }
+          if (event == 'change') {
+            perf.start()
+            log(`[🧭] Imported file [${path}] has changed, recompiling its father file [${o.father}]...`)
+            _.getShell(o.father)
+            let father = _.getFather(o.father)
+            if(father){
+              _.getShell(father)
+            }
+          }
+        })
+      })
+    }
+
+    this.getFather = function (son, call) {
+      _.importedList.forEach((element) => {
+        if(son == element.son){
+          if (call) call()
+          return true
+        }
+      })
+    }
+
+    this.getImported = function (list) {
+      list.forEach((f) => {
+        if (!fs.existsSync(f)) {
+          return false
+        }
+        let rl = readline(f)
+        let relationship = {}
+
+        rl.on('line', function (line, lineCount, byteCount) {
+          if (!line.startsWith('@import ')) {
+            return false
+          }
+          extractPath(line, {
+            validateFileExists: false
+          }).then((p) => {
+            if (_.importedList.includes(f)) {
+              return false
+            }
+            relationship['father'] = path.normalize(f)
+            relationship['son'] = path.normalize(path.join(path.dirname(relationship.father), p))
+
+            _.importedList.push(relationship)
+            _.getImported([relationship['son']])
+          })
+        }).on('error', function (e) {
+          console.log(e)
+        })
+      })
+    }
+
+    this.getShell = function (p) {
       let output_folder = _.options.output ? _.options.output : path.dirname(p)
       let output_name = path.parse(p).name
       let lessOptions = _.options.lessOptions ? _.options.lessOptions : ''
@@ -124,7 +203,6 @@ class App {
         let _i = path.normalize(_.options.input)
         let _o = path.normalize(_.options.output ? _.options.output : _i)
         let _p = path.normalize(p)
-
         rc_opf = path.dirname(_p.replace(_i, _o))
       }
 
@@ -149,10 +227,9 @@ class App {
     }
 
     this.l = function (str, name) {
-      let d = new Date().getTime()
-      let cp_hash = sha1(d)
-      let sp = cp_hash.slice(-6)
-      let s = str ? str : `Compiled successfully! #[${sp}]`
+      let t = perf.stop()
+      let s = str ? str : `Compiled in ${parseInt(t.time)}ms.`
+      console.log('')
       log(`[✅] [${name}] ${s}`)
     }
   }
