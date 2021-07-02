@@ -29,7 +29,7 @@
   "author": "Jacky Wong",
   "license": "MIT",
   "dependencies": {
-    "chokidar": "^3.5.1",
+    "chokidar": "^3.5.2",
     "commander": "^7.2.0",
     "execution-time": "^1.4.1",
     "extract-path": "^2.0.0",
