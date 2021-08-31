@@ -74,7 +74,7 @@ class App {
       }
 
       if (!fs.existsSync(_.options.input)) {
-        console.error('error: input folder does not exsist, please create it first!')
+        console.error('error: input folder does not exists, please create it first!')
         shell.exit(1)
       }
 
