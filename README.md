@@ -2,7 +2,7 @@
 
 [lessby](https://github.com/jw-12138/lessby/) is a simple less file cli-compiler.
 
-![Exsample](vid/sample.gif)
+![Exsample](vid/sample.png)
 
 ## Installation
 
