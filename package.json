@@ -1,14 +1,15 @@
 {
   "name": "lessby",
   "version": "1.0.14",
-  "description": "yep, another less compiler 🌝",
+  "description": "yep, another less compiler",
   "main": "src/index.js",
   "bin": {
     "lessby": "dist/index.js"
   },
   "scripts": {
-    "build": "npx babel src -d dist",
-    "test": "echo ''",
+    "test": "echo 'nothing to test'",
+    "build": "npx babel src -d dist --minified",
+    "dev": "npx babel src -d dist --minified -w",
     "pub": "npm publish",
     "patch": "npm version patch",
     "minor": "npm version minor",

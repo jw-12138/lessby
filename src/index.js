@@ -14,13 +14,22 @@ const { stringify } = require('querystring')
 class App {
   constructor() {
     let _ = this
-
+    
+    // 程序参数全局对象
     this.options = null
+    
+    // 获取到的用户参数
     this.param = ''
+    
+    // less编译完成后的默认后缀
     this.extension = 'css'
+    
+    
     this.recursiveArr = []
     this.hasImportedFiles = false
     this.watchList = []
+    
+    // 引用的文件
     this.importedList = []
 
     this.init = function () {
@@ -50,7 +59,10 @@ class App {
         })()
       })
     }
-
+  
+    /**
+     * 设定程序参数
+     */
     this.initProgram = function () {
       program
         .option('-i, --input <folder>', 'input less folder')
@@ -66,7 +78,10 @@ class App {
 
       this.initParam()
     }
-
+  
+    /**
+     * 初始化CLI
+     */
     this.initParam = function () {
       if (!_.options.input) {
         console.error('error: no input folder specified')
@@ -94,10 +109,10 @@ class App {
           fs.readdir(dir, c)
         }
       }
-
+      
       rec_fun(_.options.input, function (err, files) {
         files.forEach((file) => {
-          if (path.extname(file) == '.less') {
+          if (path.extname(file) === '.less' && !path.basename(file).startsWith('_')) {
             if (_.options.recursive) {
               _.watchList.push(path.normalize(file))
             } else {
@@ -105,98 +120,86 @@ class App {
             }
           }
         })
+        
         _.getImported(_.watchList)
-
-        let v = null
-        let s = setInterval(() => {
-          if (_.importedList == v) {
-            clearInterval(s)
-            call()
-          }
-          v = _.importedList
-        }, 100)
-      })
-
-      let call = function () {
-        _.watchImported()
+        
         _.watchList.forEach((f) => {
           chok.watch(f).on('all', (event, path) => {
-            if (event == 'add') {
+            if (event === 'add') {
               console.log(`lessby is watching [${path}], waiting for changes...`)
             }
-            if (event == 'change') {
+            if (event === 'change') {
               perf.start()
-              log(`[🧭] [${path}] has changed, recompiling...`)
+              log(`[*] [${path}] has changed, recompiling...`)
               _.getShell(path)
             }
           })
         })
-      }
-    }
-
-    this.watchImported = function () {
-      _.importedList.forEach((o) => {
-        chok.watch(o.son).on('all', (event, path) => {
-          if (event == 'add') {
-            console.log(`lessby is watching imported file [${path}], waiting for changes...`)
-          }
-          if (event == 'change') {
-            perf.start()
-            log(`[🧭] Imported file [${path}] has changed, recompiling its father file [${o.father}]...`)
-            _.getShell(o.father)
-
-            // recursively get father
-          }
-        })
       })
     }
-
-    this.getFather = function (son) {
-      _.importedList.forEach((element) => {
-        if(son == element.son){
-          return element.father
-        }
-      })
-    }
-
-    this.hasFather = function (son) {
-      _.importedList.forEach((element) => {
-        if(son == element.son){
-          return true
-        }
-      })
-    }
-
+  
+    /**
+     * 获取import的less文件
+     * @param {object[]} list 在watch list中的less文件
+     */
     this.getImported = function (list) {
       list.forEach((f) => {
+        let importedFile = {
+          parent: f
+        }
         if (!fs.existsSync(f)) {
           return false
         }
         let rl = readline(f)
-        let relationship = {}
 
         rl.on('line', function (line, lineCount, byteCount) {
           if (!line.startsWith('@import ')) {
             return false
           }
+          
+          let _regex = new RegExp(/ \(reference\)/g)
+          if(_regex.test(line)){
+            console.log(`[${lineCount}: ${line}], skipping reference file...`)
+            return false
+          }
+          
           extractPath(line, {
             validateFileExists: false
           }).then((p) => {
-            if (_.importedList.includes(f)) {
-              return false
-            }
-            relationship['father'] = path.normalize(f)
-            relationship['son'] = path.normalize(path.join(path.dirname(relationship.father), p))
-
-            _.importedList.push(relationship)
-            _.getImported([relationship['son']])
+            importedFile.self = path.normalize(path.join(_.options.input, p))
+            _.watchImported(importedFile)
+            _.getImported([importedFile.self])
           })
         }).on('error', function (e) {
           console.log(e)
         })
       })
     }
-
+  
+    /**
+     * 监听引用的文件，如果有修改则触发主文件重构
+     * @param {object} importedFile
+     */
+    this.watchImported = function (importedFile) {
+      let _self = importedFile.self
+      let _parent = importedFile.parent
+  
+      chok.watch(_self).on('all', (event, path) => {
+        if (event === 'add') {
+          console.log(`lessby is watching imported file [${path}], waiting for changes...`)
+        }
+        if (event === 'change') {
+          perf.start()
+          log(`[*] [${path}] has changed, recompiling its parent file [${_parent}]...`)
+          _.getShell(_parent)
+        }
+      })
+    }
+  
+    /**
+     * 拼接执行的脚本
+     * @param {string} p - path
+     */
     this.getShell = function (p) {
       let output_folder = _.options.output ? _.options.output : path.dirname(p)
       let output_name = path.parse(p).name
@@ -222,20 +225,25 @@ class App {
     }
 
     this.execShell = function (script, name) {
-      shell.exec(script, function (code, stdout, stderr) {
+      shell.exec(script, {silent:true}, function (code, stdout, stderr) {
         if (stderr) {
-          console.log(stdout)
+          console.log('\n\n' + stderr)
         } else {
           _.l('', name)
         }
       })
     }
-
+  
+    /**
+     * log到终端
+     * @param {string} str
+     * @param {string} name - full file name
+     */
     this.l = function (str, name) {
       let t = perf.stop()
       let s = str ? str : `Compiled in ${parseInt(t.time)}ms.`
       console.log('')
-      log(`[✅] [${name}] ${s}`)
+      console.log('\x1b[32m%s\x1b[0m',`[√] [${name}] ${s}`)
     }
   }
 }

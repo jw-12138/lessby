@@ -4,6 +4,10 @@
 
 ![Exsample](vid/sample.gif)
 
+[中文文档](README-cn.md)
+
+[Change log](CHANGELOG.md)
+
 ## Installation
 
 ```
