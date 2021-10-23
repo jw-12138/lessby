@@ -4,19 +4,38 @@
 
 ![Exsample](vid/sample.gif)
 
-[中文文档](README-cn.md)
-
-[Change log](CHANGELOG.md)
-
 ## Installation
 
 ```
 npm i lessby -D
 ```
 
+### 1.1 update
+
+First thing is, the imported less file changes can now trigger the parent less file to be compiled. Nested import is not supported yet. And still, there are a few things you need be aware of.
+
+When use `@import`, the path name must contain at least one slash and the `.less` suffix is a must-have. You'll see why later.
+
+```less
+@import "./_comp.less";  // good
+
+@import "_comp";  // bad
+```
+
+The current solution I use is like this:
+
+1. find the imported files by analyzing the parent file line-by-line
+2. get the line that has `@import`, and dump into path extraction module [extract-path](https://www.npmjs.com/package/extract-path)
+
+The problem is, when i get the line like `@import "_comp.less";`, the extraction module kinda struggles, it doesn't know what the path is, instead of giving me `_comp.less` it gives me the unchanged string, which will lead to lessby can't load the imported files correctly. 
+
+If you have any better ideas, any kinda help will be appreciated!
+
+Secondly, the file name started with `_` like `_comp.less` will be ignored by lessby now, these kinda file will be marked as import file, so no direct compilation.
+
 ## Usage
 
-``` 
+```text
 Usage: lessby [options]
 
 Options:
@@ -34,7 +53,7 @@ Options:
 ### `-i, --input <folder>`
 
 `required`  
-```
+```shell
 lessby -i <folder_name>
 ```
 
@@ -42,7 +61,7 @@ Normally, lessby will watch all the less files inside the input folder, this act
 
 ### `-o, --output <folder>`
 
-```
+```shell
 lessby -i <folder_name> -o <output_foler_name>
 ```
 
@@ -50,7 +69,7 @@ lessby -i <folder_name> -o <output_foler_name>
 
 Seriously, it's not just CSS out there.
 
-```
+```shell
 lessby -i <folder_name> -e wxss
 ```
 
@@ -58,7 +77,7 @@ This will compile all the less files into CSS files with `.wxss` extension. You 
 
 ### `--mid-name <str>`
 
-```
+```shell
 lessby -i <folder_name> -m --mid-name min
 ```
 
@@ -72,7 +91,7 @@ FINALLY!!!
 
 A less compiler with recursive option!
 
-```
+```shell
 lessby -i src -r
 ```
 
@@ -82,7 +101,7 @@ If `src/` has a sub-folder and it contains less files, lessby will find it, and 
 
 As mentioned above, this parameter minifies output files.
 
-```
+```shell
 lessby -i src -r -m
 ```
 
@@ -90,7 +109,7 @@ lessby -i src -r -m
 
 lessby will generate source map files, those little things are helpful when in development.
 
-```
+```shell
 lessby -i src -s
 ```
 
