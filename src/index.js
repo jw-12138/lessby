@@ -150,14 +150,14 @@ class App {
               _.getShell(path, function () {
                 _.initialBuildDone++
                 if(_.options.oneTime && _.initialBuildDone === _.watchList.length){
-                  watcher.close().then(() => console.log('bye 👋'))
+                  watcher.close().then(() => console.log('👋 bye'))
                 }
               })
             }
           }
           if (event === 'change') {
             perf.start()
-            log(`🙈 [${path}] has changed, recompiling...`)
+            log(`🙈[${path}] has changed, recompiling...`)
             _.getShell(path)
           }
         })
