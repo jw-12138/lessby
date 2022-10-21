@@ -5,10 +5,7 @@ const chok = require('chokidar')
 const fs = require('fs')
 const path = require('path')
 const shell = require('shelljs')
-const log = require('single-line-log').stdout
 const perf = require('execution-time')()
-const readline = require('linebyline')
-const extractPath = require('extract-path')
 
 class App {
   constructor() {
@@ -157,7 +154,7 @@ class App {
           }
           if (event === 'change') {
             perf.start()
-            log(`🙈[${path}] has changed, recompiling...`)
+            console.log(`🙈[${path}] has changed, recompiling...`)
             _.getShell(path)
           }
         })
@@ -212,7 +209,6 @@ class App {
     this.l = function (str, name) {
       let t = perf.stop()
       let s = str ? str : `Compiled in ${parseInt(t.time)}ms.`
-      console.log('')
       console.log('\x1b[32m%s\x1b[0m',`✨ [${name}] ${s}`)
     }
   }
