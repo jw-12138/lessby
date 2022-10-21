@@ -139,10 +139,14 @@ class App {
         if(_.options.initialBuild){
           console.log(`🙈 <-b, --initial-build> is passed, building...`)
         }
+        
+        if(_.options.oneTime){
+          console.log(`🙈 <--one-time> is passed, building...`)
+        }
   
         let watcher = chok.watch(_.watchList).on('all', (event, path) => {
           if (event === 'add') {
-            if(_.options.initialBuild){
+            if(_.options.initialBuild || _.options.oneTime){
               perf.start()
               _.getShell(path, function () {
                 _.initialBuildDone++
