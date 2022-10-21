@@ -9,7 +9,6 @@ const log = require('single-line-log').stdout
 const perf = require('execution-time')()
 const readline = require('linebyline')
 const extractPath = require('extract-path')
-const { stringify } = require('querystring')
 
 class App {
   constructor() {
@@ -26,15 +25,13 @@ class App {
     
     
     this.recursiveArr = []
-    this.hasImportedFiles = false
     this.watchList = []
-    
-    // 引用的文件
-    this.importedList = []
 
     this.init = function () {
       this.initProgram()
     }
+    
+    this.initialBuildDone = []
 
     this.walk = function (dir, done) {
       var results = []
@@ -69,9 +66,12 @@ class App {
         .option('-o, --output <folder>', 'output less folder')
         .option('-e, --extension <ext>', "output file extension, eg. ' -e wxss '")
         .option('--mid-name <str>', "specify output file middle name, eg. ' --mid-name min '")
+        .option('-b, --initial-build', 'compile less files before watch')
+        .option('--one-time', 'compile less files ony once')
         .option('-r, --recursive', 'compile less files recursively')
         .option('-m, --minify', 'minify output file')
         .option('-s, --source-map', 'generate source map files')
+        .option('--source-map-inline', 'generate inline source map files')
         .option('--less-options <str>', 'specify original less-cli options, eg. \' --less-options "-l --no-color" \'')
       program.parse()
       this.options = program.opts()
@@ -96,6 +96,11 @@ class App {
       if (_.options.sourceMap) {
         _.param += '--source-map '
       }
+  
+      if (_.options.sourceMapInline) {
+        _.param.replace('--source-map ', '')
+        _.param += '--source-map-inline '
+      }
 
       if (_.options.minify) {
         _.param += '--clean-css '
@@ -111,6 +116,13 @@ class App {
       }
       
       rec_fun(_.options.input, function (err, files) {
+        if(err){
+          console.log(err)
+          if(!fs.lstatSync(_.options.input).isDirectory()){
+            console.log('\n<-i> will only accept a folder, not a file!')
+          }
+          return
+        }
         files.forEach((file) => {
           if (path.extname(file) === '.less' && !path.basename(file).startsWith('_')) {
             if (_.options.recursive) {
@@ -120,87 +132,44 @@ class App {
             }
           }
         })
-        
-        _.getImported(_.watchList)
-        
-        _.watchList.forEach((f) => {
-          chok.watch(f).on('all', (event, path) => {
-            if (event === 'add') {
-              console.log(`lessby is watching [${path}], waiting for changes...`)
-            }
-            if (event === 'change') {
+  
+        if(!_.options.oneTime){
+          _.watchList.forEach(el => {
+            console.log(`🙈 lessby is watching [${el}]`)
+          })
+        }
+  
+        if(_.options.initialBuild){
+          console.log(`🙈 <-b, --initial-build> is passed, starting building...`)
+        }
+  
+        let watcher = chok.watch(_.watchList).on('all', (event, path) => {
+          if (event === 'add') {
+            if(_.options.initialBuild){
               perf.start()
-              log(`[*] [${path}] has changed, recompiling...`)
-              _.getShell(path)
+              _.getShell(path, function () {
+                _.initialBuildDone++
+                if(_.options.oneTime && _.initialBuildDone === _.watchList.length){
+                  watcher.close().then(() => console.log('bye 👋'))
+                }
+              })
             }
-          })
-        })
-      })
-    }
-  
-    /**
-     * 获取import的less文件
-     * @param {object[]} list 在watch list中的less文件
-     */
-    this.getImported = function (list) {
-      list.forEach((f) => {
-        let importedFile = {
-          parent: f
-        }
-        if (!fs.existsSync(f)) {
-          return false
-        }
-        let rl = readline(f)
-
-        rl.on('line', function (line, lineCount, byteCount) {
-          if (!line.startsWith('@import ')) {
-            return false
           }
-          
-          let _regex = new RegExp(/ \(reference\)/g)
-          if(_regex.test(line)){
-            console.log(`[${lineCount}: ${line}], skipping reference file...`)
-            return false
+          if (event === 'change') {
+            perf.start()
+            log(`🙈 [${path}] has changed, recompiling...`)
+            _.getShell(path)
           }
-          
-          extractPath(line, {
-            validateFileExists: false
-          }).then((p) => {
-            importedFile.self = path.normalize(path.join(_.options.input, p))
-            _.watchImported(importedFile)
-            _.getImported([importedFile.self])
-          })
-        }).on('error', function (e) {
-          console.log(e)
         })
-      })
-    }
-  
-    /**
-     * 监听引用的文件，如果有修改则触发主文件重构
-     * @param {object} importedFile
-     */
-    this.watchImported = function (importedFile) {
-      let _self = importedFile.self
-      let _parent = importedFile.parent
-  
-      chok.watch(_self).on('all', (event, path) => {
-        if (event === 'add') {
-          console.log(`lessby is watching imported file [${path}], waiting for changes...`)
-        }
-        if (event === 'change') {
-          perf.start()
-          log(`[*] [${path}] has changed, recompiling its parent file [${_parent}]...`)
-          _.getShell(_parent)
-        }
       })
     }
   
     /**
      * 拼接执行的脚本
      * @param {string} p - path
+     * @param {function} cb - callback
      */
-    this.getShell = function (p) {
+    this.getShell = function (p, cb) {
       let output_folder = _.options.output ? _.options.output : path.dirname(p)
       let output_name = path.parse(p).name
       let lessOptions = _.options.lessOptions ? _.options.lessOptions : ''
@@ -221,15 +190,16 @@ class App {
       }
       let op = rc_opf ? `${rc_opf}/${output_name}.${e}` : `${output_folder}/${output_name}.${e}`
       let sh = `npx lessc ${lessOptions} ${_.param} "${p}" "${op}"`
-      _.execShell(sh, p)
+      _.execShell(sh, p, cb)
     }
 
-    this.execShell = function (script, name) {
+    this.execShell = function (script, name, cb) {
       shell.exec(script, {silent:true}, function (code, stdout, stderr) {
         if (stderr) {
           console.log('\n\n' + stderr)
         } else {
           _.l('', name)
+          cb && cb()
         }
       })
     }
@@ -243,7 +213,7 @@ class App {
       let t = perf.stop()
       let s = str ? str : `Compiled in ${parseInt(t.time)}ms.`
       console.log('')
-      console.log('\x1b[32m%s\x1b[0m',`[√] [${name}] ${s}`)
+      console.log('\x1b[32m%s\x1b[0m',`✨ [${name}] ${s}`)
     }
   }
 }
